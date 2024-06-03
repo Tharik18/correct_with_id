@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Details</title>
+    <script>
+        async function fetchStudentDetails(studentId) {
+            let response = await fetch(`/api/registration/student/${studentId}`);
+            let student = await response.json();
+            document.getElementById('studentName').innerText = student.firstname + " " + student.lastname;
+            document.getElementById('studentCourse').innerText = student.course;
+            document.getElementById('studentTeacher').innerText = student.teacherId; // Update this if you need the teacher's name
+            document.getElementById('currentTiming').innerText = student.timing;
+
+            // Fetch and show the availability for the teacher
+            showAvailability(student.teacherId);
+        }
+
+        async function showAvailability(teacherId) {
+            let response = await fetch(`/api/registration/availability/${teacherId}`);
+            let availability = await response.json();
+            let timingSelect = document.getElementById('newTiming');
+            timingSelect.innerHTML = '<option value="">Select Timing</option>';
+            availability.forEach(time => {
+                timingSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            });
+        }
+
+        async function changeTiming(studentId) {
+            let newTiming = document.getElementById('newTiming').value;
+            if (!newTiming) {
+                alert("Please select a new timing.");
+                return;
+            }
+
+            let response = await fetch(`/api/registration/change-timing/${studentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ newTiming: newTiming })
+            });
+
+            let result = await response.text();
+            if (result === "Timing updated successfully!") {
+                alert(result);
+                window.location.reload();
+            } else {
+                alert(result);
+            }
+        }
+
+        window.onload = function() {
+            let studentId = 14; // Replace with the actual student ID you want to fetch details for
+            fetchStudentDetails(studentId);
+        };
+    </script>
+</head>
+<body>
+    <h2>Student Details</h2>
+    <p><strong>Name:</strong> <span id="studentName"></span></p>
+    <p><strong>Course:</strong> <span id="studentCourse"></span></p>
+    <p><strong>Teacher:</strong> <span id="studentTeacher"></span></p>
+    <p><strong>Current Timing:</strong> <span id="currentTiming"></span></p>
+
+    <h3>Change Timing</h3>
+    <label for="newTiming">New Timing:</label>
+    <select id="newTiming" name="newTiming"></select><br>
+    <button onclick="changeTiming(14)">Change Timing</button> <!-- Replace with actual student ID -->
+</body>
+</html>
